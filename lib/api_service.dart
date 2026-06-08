@@ -15,6 +15,15 @@ class ApiService {
     } else {
       throw Exception('Failed to load data');
     }
-    
+  }
+
+  Future<ProductInfo> getProductDetail(int id) async {
+    final response = await http.get(Uri.parse('$baseUrl/$id'));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonData = jsonDecode(response.body);
+      return ProductInfo.fromJson(jsonData);
+    } else {
+      throw Exception('Failed to load product detail');
+    }
   }
 }
