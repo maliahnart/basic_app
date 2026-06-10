@@ -7,7 +7,7 @@ class ApiService {
   static const String baseUrl = "https://fakestoreapi.com/products";
 
   Future<List<ProductInfo>> fetchData() async {
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(milliseconds: 500));
     final response = await http.get(Uri.parse(baseUrl));
     if (response.statusCode == 200) {
       final List<dynamic> jsonData = jsonDecode(response.body);

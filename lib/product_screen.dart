@@ -12,30 +12,70 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
+  final ScrollController _scrollController = ScrollController();
   final ApiService apiService = ApiService();
-  List<ProductInfo> products = [];
+  List<ProductInfo> allproducts = [];
+  List<ProductInfo> visibleProducts = [];
   bool isLoading = true;
+  bool isLoadingMore = false;
   String? errorMessage;
+  static const int pageSize = 8;
 
   @override
   void initState() {
     super.initState();
     fetchProducts();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      loadMore();
+    }
   }
 
   Future<void> fetchProducts() async {
     try {
-      final fetchedProducts = await apiService.fetchData();
       setState(() {
-        products = fetchedProducts;
-        isLoading = false;
+        isLoading = true;
+        errorMessage = null;
       });
+      final fetchedProducts = await apiService.fetchData();
+      allproducts = fetchedProducts;
+      visibleProducts.clear();
+      visibleProducts.addAll(allproducts.take(pageSize));
     } catch (e) {
-      setState(() {
         errorMessage = e.toString();
+    } finally {
+      setState(() {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> loadMore() async {
+    if (isLoadingMore) return;
+    if (visibleProducts.length >= allproducts.length) return;
+    setState(() {
+      isLoadingMore = true;
+    });
+    await Future.delayed(const Duration(milliseconds: 500));
+    final nextLength = (visibleProducts.length + pageSize).clamp(
+      0,
+      allproducts.length,
+    );
+    visibleProducts.clear();
+    visibleProducts.addAll(allproducts.take(nextLength));
+    setState(() {
+      isLoadingMore = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> refreshProducts() async {
@@ -57,7 +97,19 @@ class _ProductScreenState extends State<ProductScreen> {
     if (errorMessage != null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Products')),
-        body: Center(child: Text('Error: $errorMessage')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(errorMessage!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: refreshProducts,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       );
     }
     return Scaffold(
@@ -66,9 +118,16 @@ class _ProductScreenState extends State<ProductScreen> {
       body: RefreshIndicator(
         onRefresh: refreshProducts,
         child: ListView.builder(
-          itemCount: products.length,
+          controller: _scrollController,
+          itemCount: visibleProducts.length + (isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {
-            final product = products[index];
+            if (index >= visibleProducts.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final product = visibleProducts[index];
             return CustomProductCard(
               product: product,
               onTap: () {

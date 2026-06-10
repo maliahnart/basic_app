@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:demo_app/api_service.dart';
 import 'package:demo_app/product_info.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,6 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> fetchProductDetail() async {
     try {
       final result = await apiService.getProductDetail(widget.productId);
-      await Future.delayed(Duration(seconds: 1));
       setState(() {
         product = result;
         isLoading = false;
@@ -58,7 +58,23 @@ class _DetailScreenState extends State<DetailScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Image.network(item.image, height: 200),
+            CachedNetworkImage(
+              imageUrl: item.image,
+              height: 200,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                height: 200,
+                color: Colors.grey[200],
+                child: const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                height: 200,
+                color: Colors.grey[200],
+                child: const Icon(Icons.error, color: Colors.red),
+              ),
+            ),
             const SizedBox(height: 16),
             Text(item.description, style: TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
