@@ -1,23 +1,22 @@
+import 'package:demo_app/controller/product_detail_controller.dart';
 import 'package:demo_app/detail_screen.dart';
-import 'package:demo_app/product_info.dart';
 import 'package:demo_app/product_screen.dart';
-import 'package:go_router/go_router.dart';
+import 'package:demo_app/route/routes.dart';
+import 'package:get/get.dart';
 
-part 'routes.dart';
 
-final routes = GoRouter(
-  routes: [
-    GoRoute(
-      path: Routes.products.path,
-      builder: (context, state) => const ProductScreen(),
+class AppPages{
+  static final router = [
+    GetPage(
+      name: Routes.products,
+      page: () =>  ProductScreen(),
     ),
-    GoRoute(
-      path: Routes.productDetail.path,
-      builder: (context, state) {
-        final id = state.pathParameters['id'];
-        final product = state.extra as ProductInfo?;
-        return DetailScreen(productId: int.parse(id!), product: product!);
-      },
-    ),
-  ],
-);
+    GetPage(
+      name: Routes.productDetail,
+      page: () => ProductDetailPage(),
+      binding: BindingsBuilder((){
+        Get.lazyPut<ProductDetailController>(() => ProductDetailController());
+      })
+      ),
+  ];
+}
