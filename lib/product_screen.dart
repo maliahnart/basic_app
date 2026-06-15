@@ -1,79 +1,72 @@
-import 'package:demo_app/controller/product_list_controller.dart';
 import 'package:demo_app/custom_card.dart';
+import 'package:demo_app/product_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class ProductScreen extends StatelessWidget {
-  ProductScreen({super.key});
-  final controller = Get.put(ProductListController());
+class ProductScreen extends ConsumerStatefulWidget {
+  const ProductScreen({super.key});
+
+  @override
+  ConsumerState<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends ConsumerState<ProductScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        ref.read(productProvider.notifier).loadMore();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('products'.tr),
-        actions: [
-          PopupMenuButton(
-            onSelected: (value) {
-              if (value == 'vi') {
-                Get.updateLocale(const Locale('vi', 'VN'));
-              }
+    final state = ref.watch(productProvider);
 
-              if (value == 'en') {
-                Get.updateLocale(const Locale('en', 'US'));
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'vi', child: Text('Tiếng Việt')),
-              const PopupMenuItem(value: 'en', child: Text('English')),
-            ],
-          ),
-        ],
+    if (state.isLoading && state.products.isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Products')),
+      body: RefreshIndicator(
+        onRefresh: ref.read(productProvider.notifier).refreshProducts,
+        child: ListView.builder(
+          controller: _scrollController,
+          itemCount: state.products.length + (state.isLoadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == state.products.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final product = state.products[index];
+
+            return CustomProductCard(
+              product: product,
+              onTap: () {
+                context.push('/product/${product.id}');
+              },
+            );
+          },
+        ),
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (controller.errorMessage.value.isNotEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(controller.errorMessage.value),
-                ElevatedButton(
-                  onPressed: controller.refreshProducts,
-                  child: Text('retry'.tr),
-                ),
-              ],
-            ),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: controller.refreshProducts,
-          child: ListView.builder(
-            controller: controller.scrollController,
-            itemCount:
-                controller.products.length +
-                (controller.isLoadingMore.value ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index < controller.products.length) {
-                final item = controller.products[index];
-                return CustomProductCard(
-                  product: item,
-                  onTap: () {
-                    Get.toNamed('/products/${item.id}');
-                  },
-                );
-              } else {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-            },
-          ),
-        );
-      }),
     );
   }
 }

@@ -1,76 +1,53 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:demo_app/controller/product_detail_controller.dart';
+import 'package:demo_app/product_detail_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProductDetailPage extends GetView<ProductDetailController> {
-  const ProductDetailPage({super.key});
+class ProductDetailScreen extends ConsumerWidget {
+  const ProductDetailScreen({super.key, required this.productId});
+
+  final int productId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productAsync = ref.watch(productDetailProvider(productId));
+
     return Scaffold(
-      appBar: AppBar(title: Text('product_detail'.tr),),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      appBar: AppBar(),
+      body: productAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text(error.toString())),
 
-        if (controller.errorMessage.value.isNotEmpty) {
-          return Center(child: Text(controller.errorMessage.value));
-        }
+        data: (product) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CachedNetworkImage(imageUrl: product.thumbnail),
 
-        final product = controller.product.value;
+                const SizedBox(height: 16),
 
-        if (product == null) {
-          return const SizedBox();
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: CachedNetworkImage(
-                  imageUrl: product.image,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    height: 200,
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    height: 200,
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.error, color: Colors.red),
+                Text(
+                  product.title,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
-              Text(
-                product.title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                Text('\$${product.price}'),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              Text('\$${product.price}'),
-
-              const SizedBox(height: 12),
-
-              Text(product.description),
-            ],
-          ),
-        );
-      }),
+                Text(product.description),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

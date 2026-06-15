@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:demo_app/product_info.dart';
+import 'package:demo_app/model/product_info.dart';
 import 'package:flutter/material.dart';
 
 class CustomProductCard extends StatelessWidget {
-  final ProductInfo product;
+  final Product product;
   final VoidCallback? onTap;
 
   const CustomProductCard({super.key, required this.product, this.onTap});
@@ -24,7 +24,7 @@ class CustomProductCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
-                  imageUrl: product.image,
+                  imageUrl: product.thumbnail,
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,

@@ -1,24 +1,24 @@
-class ProductInfo {
+class Product {
   final int id;
   final String title;
   final String description;
-  final String image;
   final double price;
+  final String thumbnail;
 
-  ProductInfo({
+  Product({
     required this.id,
     required this.title,
     required this.description,
     required this.price,
-    required this.image,
+    required this.thumbnail,
   });
-  factory ProductInfo.fromJson(Map<String, dynamic> json) {
-    return ProductInfo(
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
       id: json['id'],
       title: json['title'],
       description: json['description'],
-      price: json['price'].toDouble(),
-      image: json['image'],
+      price: (json['price'] as num).toDouble(),
+      thumbnail: json['thumbnail'],
     );
   }
 }

@@ -1,13 +1,10 @@
-import 'package:demo_app/api_service.dart';
 import 'package:demo_app/route/app_navigator.dart';
-import 'package:demo_app/translation/app_translation.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 void main() {
-  Get.put(ApiService(),
-      permanent: true); 
-  runApp(const MyApp());
+ runApp(const ProviderScope(
+  child: MyApp()
+ ));
 }
 
 class MyApp extends StatelessWidget {
@@ -16,7 +13,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -37,11 +34,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      translations: AppTranslation(),
-      locale: const Locale('vi', 'VN'),
-      fallbackLocale: const Locale('en', 'US'),
-      initialRoute: '/',
-      getPages: AppPages.router,
+      routerConfig: appRouter,
     );
   }
 }
