@@ -1,10 +1,8 @@
-import 'package:demo_app/route/app_navigator.dart';
+import 'package:demo_app/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 void main() {
- runApp(const ProviderScope(
-  child: MyApp()
- ));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -13,7 +11,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -34,7 +32,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      routerConfig: appRouter,
+      home: HomeScreen(),
     );
   }
 }
