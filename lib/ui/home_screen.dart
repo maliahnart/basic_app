@@ -1,216 +1,196 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import '../utils/constants.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final FlutterTts flutterTts = FlutterTts();
-  final TextEditingController textController = TextEditingController();
-  Map<String, String> languageMap = {
-    'en-US': 'English',
-    'ur-PK': 'Urdu',
-    'hi-IN': 'Hindi',
-    'es-ES': 'Spanish',
-    'fr-FR': 'French',
-    'de-DE': 'German',
-    'zh-CN': 'Chinese',
-    'ja-JP': 'Japanese',
-    'ko-KR': 'Korean',
-    'it-IT': 'Italian',
-    'pt-PT': 'Portuguese',
-    'ru-RU': 'Russia',
-    'vi-VN': 'Vietnam',
-  };
-
-  List<String> languages = [];
-  String? selectedLanguage;
-  double pitch = 1.0;
-  double speechRate = 0.5;
-  double volume = 0.8;
-  Future<void> initTts() async {
-    List<dynamic> availableLanguages = await flutterTts.getLanguages;
-    languages = availableLanguages
-        .where((language) => languageMap.keys.contains(language))
-        .map((language) => language as String)
-        .toList();
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    textController.dispose();
-    super.dispose();
-  }
-
-  Future<void> speak(String text) async {
-    await flutterTts.setLanguage(selectedLanguage ?? 'vi-VN');
-    await flutterTts.setPitch(pitch);
-    await flutterTts.setVolume(volume);
-    await flutterTts.setSpeechRate(speechRate);
-    await flutterTts.speak(text);
-  }
-
-  Future<void> save(String text) async {
-    await flutterTts.setLanguage(selectedLanguage ?? 'en-US');
-    await flutterTts.setPitch(pitch);
-    await flutterTts.setVolume(volume);
-    await flutterTts.setSpeechRate(speechRate);
-    String timestamp = DateTime.now().microsecondsSinceEpoch.toString();
-    await flutterTts.synthesizeToFile(text, 'tts_audio_$timestamp.mp3');
-  }
-
-  Future<void> stop() async {
-    await flutterTts.stop();
-  }
-
-  Future<void> pause() async {
-    await flutterTts.pause();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Text to speech')),
-      body: Padding(
-        padding: EdgeInsets.all(20),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        title: Text('Chuyển Đổi Giọng Nói', style: AppTextStyles.appBarTitle),
+        centerTitle: true,
+      ),
+      body: SafeArea(
         child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: textController,
-                decoration: InputDecoration(
-                  hintText: "Enter the text",
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 5,
+              _buildGreeting(),
+              SizedBox(height: 24.h),
+              _buildFeatureCard(
+                title: 'Chuyển đổi Giọng nói\nsang Văn bản',
+                actionText: 'Ghi âm ngay',
+                icon: Icons.mic,
+                iconBgColor: AppColors.sttIconBg,
+                onTap: () {
+                  context.push('/record');
+                },
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 16.h),
+              _buildFeatureCard(
+                title: 'Chuyển đổi Văn bản\nsang Giọng nói',
+                actionText: 'Nhập văn bản',
+                icon: Icons.volume_up,
+                iconBgColor: AppColors.ttsIconBg,
+                onTap: () {
+                  context.push('/playback');
+                },
+              ),
+              SizedBox(height: 28.h),
+              _buildRecentSection(),
+              SizedBox(height: 12.h),
+              _buildRecentList(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGreeting() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Xin chào!', style: AppTextStyles.greetingTitle),
+        SizedBox(height: 4.h),
+        Text(
+          'Hôm nay bạn muốn xử lý âm thanh như thế nào?',
+          style: AppTextStyles.greetingSub,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureCard({
+    required String title,
+    required String actionText,
+    required IconData icon,
+    required Color iconBgColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r),
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(icon, color: Colors.white, size: 24.w),
+              ),
+              SizedBox(height: 20.h),
+              Text(title, style: AppTextStyles.cardTitle),
+              SizedBox(height: 12.h),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Column(
-                    children: [
-                      IconButton(
-                        onPressed: () async {
-                          await speak(textController.text);
-                        },
-                        icon: Icon(Icons.play_arrow, color: Colors.green),
-                      ),
-                      Text('Play', style: TextStyle(color: Colors.green)),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      IconButton(
-                        onPressed: () async {
-                          await stop();
-                        },
-                        icon: Icon(Icons.stop, color: Colors.redAccent),
-                      ),
-                      Text('Stop', style: TextStyle(color: Colors.redAccent)),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      IconButton(
-                        onPressed: () async {
-                          await pause();
-                        },
-                        icon: Icon(Icons.pause, color: Colors.indigo),
-                      ),
-                      Text('Pause', style: TextStyle(color: Colors.indigo)),
-                    ],
+                  Text(actionText, style: AppTextStyles.cardAction),
+                  SizedBox(width: 4.w),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: AppColors.primary,
+                    size: 16.w,
                   ),
                 ],
-              ),
-              SizedBox(height: 20),
-              Padding(
-                padding: EdgeInsets.all(8),
-                child: DropdownButton<String>(
-                  hint: Text("Select lanuage"),
-                  items: languages
-                      .map(
-                        (language) => DropdownMenuItem<String>(
-                          value: language,
-                          child: Text(languageMap[language]!),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedLanguage = value;
-                    });
-                  },
-                ),
-              ),
-              SizedBox(height: 20),
-              Text("Volume: ${volume.toStringAsFixed(1)}"),
-              Slider(
-                activeColor: Colors.green,
-                min: 0.0,
-                max: 1.0,
-                value: volume,
-                onChanged: (value) {
-                  setState(() {
-                    volume = value;
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-              Text("Pitch: ${pitch.toStringAsFixed(1)}"),
-              Slider(
-                activeColor: Colors.redAccent,
-                min: 0.5,
-                max: 2.0,
-                value: pitch,
-                onChanged: (value) {
-                  setState(() {
-                    pitch = value;
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-              Text("Speech Rate: ${speechRate.toStringAsFixed(1)}"),
-              Slider(
-                activeColor: Colors.indigo,
-                min: 0.0,
-                max: 1.0,
-                value: speechRate,
-                onChanged: (value) {
-                  setState(() {
-                    speechRate = value;
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () async {
-                    await save(textController.text);
-                  },
-                  child: Text("Save"),
-                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRecentSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text('Gần đây', style: AppTextStyles.sectionTitle),
+        TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          child: Text('Xem tất cả', style: AppTextStyles.sectionAction),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentList() {
+    final mockData = [
+      {
+        'title': 'Cuộc họp dự án AI 2024...',
+        'sub': 'HÔM NAY - STT',
+        'isStt': true,
+      },
+      {
+        'title': 'Thông báo khách hàng v1',
+        'sub': 'HÔM QUA - TTS',
+        'isStt': false,
+      },
+    ];
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: mockData.length,
+      separatorBuilder: (context, index) => SizedBox(height: 12.h),
+      itemBuilder: (context, index) {
+        final item = mockData[index];
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.border, width: 0.5),
+          ),
+          child: ListTile(
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 4.h,
+            ),
+            leading: Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                item['isStt'] as bool
+                    ? Icons.description_outlined
+                    : Icons.volume_up_outlined,
+                color: AppColors.textGrey,
+                size: 20.w,
+              ),
+            ),
+            title: Text(
+              item['title'] as String,
+              style: AppTextStyles.itemTitle,
+            ),
+            subtitle: Text(item['sub'] as String, style: AppTextStyles.itemSub),
+            trailing: IconButton(
+              icon: const Icon(Icons.more_vert, color: AppColors.textGrey),
+              onPressed: () {},
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,12 +1,11 @@
 import 'package:demo_app/ui/home_screen.dart';
+import 'package:demo_app/ui/playback_screen.dart';
+import 'package:demo_app/ui/record_screen.dart';
 import 'package:demo_app/ui/widgets/bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 part 'route.dart';
 
-// Khởi tạo các Placeholder cho các màn hình còn lại để không bị lỗi compile
-class RecordScreen extends StatelessWidget { const RecordScreen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Ghi âm'))); }
-class PlaybackScreen extends StatelessWidget { const PlaybackScreen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Phát âm'))); }
 class SettingsScreen extends StatelessWidget { const SettingsScreen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Cài đặt'))); }
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
