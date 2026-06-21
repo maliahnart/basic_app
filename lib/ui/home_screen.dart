@@ -1,5 +1,3 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_patch.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -26,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'it-IT': 'Italian',
     'pt-PT': 'Portuguese',
     'ru-RU': 'Russia',
+    'vi-VN': 'Vietnam',
   };
 
   List<String> languages = [];
@@ -54,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> speak(String text) async {
-    await flutterTts.setLanguage(selectedLanguage ?? 'en-US');
+    await flutterTts.setLanguage(selectedLanguage ?? 'vi-VN');
     await flutterTts.setPitch(pitch);
     await flutterTts.setVolume(volume);
     await flutterTts.setSpeechRate(speechRate);
