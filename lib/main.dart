@@ -5,11 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(VoiceRecordAdapter());
-  await Hive.openBox<VoiceRecord>('history');
   runApp(const ProviderScope(child: MyApp()));
 }
 

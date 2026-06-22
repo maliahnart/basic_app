@@ -1,13 +1,49 @@
+import 'package:demo_app/providers/history_provider.dart';
+import 'package:demo_app/ui/widgets/record_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../utils/constants.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _dropdownKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToDropdown(bool isExpanded) {
+    if (isExpanded) {
+      Future.delayed(const Duration(milliseconds: 250), () {
+        final context = _dropdownKey.currentContext;
+        if (context != null) {
+          Scrollable.ensureVisible(
+            context,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            alignment: 0.0,
+          );
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final recentRecords = ref.watch(historyProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -17,6 +53,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,9 +65,7 @@ class HomeScreen extends StatelessWidget {
                 actionText: 'Ghi âm ngay',
                 icon: Icons.mic,
                 iconBgColor: AppColors.sttIconBg,
-                onTap: () {
-                  context.push('/record');
-                },
+                onTap: () => context.go('/record'),
               ),
               SizedBox(height: 16.h),
               _buildFeatureCard(
@@ -38,14 +73,13 @@ class HomeScreen extends StatelessWidget {
                 actionText: 'Nhập văn bản',
                 icon: Icons.volume_up,
                 iconBgColor: AppColors.ttsIconBg,
-                onTap: () {
-                  context.push('/playback');
-                },
+                onTap: () => context.go('/playback'),
               ),
               SizedBox(height: 28.h),
-              _buildRecentSection(),
-              SizedBox(height: 12.h),
-              _buildRecentList(),
+              Container(
+                key: _dropdownKey,
+                child: _buildRecentCollapsible(recentRecords, ref, context),
+              ),
             ],
           ),
         ),
@@ -119,41 +153,80 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Gần đây', style: AppTextStyles.sectionTitle),
-        TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-          child: Text('Xem tất cả', style: AppTextStyles.sectionAction),
+  Widget _buildRecentCollapsible(
+    List recentRecords,
+    WidgetRef ref,
+    BuildContext context,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
-      ],
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+          title: Text(
+            'Bản ghi gần đây',
+            style: AppTextStyles.sectionTitle.copyWith(fontSize: 16.sp),
+          ),
+          leading: Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(Icons.history, color: AppColors.primary, size: 20.w),
+          ),
+          trailing: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColors.textGrey,
+          ),
+          childrenPadding: EdgeInsets.only(
+            left: 12.w,
+            right: 12.w,
+            bottom: 12.h,
+          ),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          onExpansionChanged: _scrollToDropdown,
+          children: [_buildRecentList(recentRecords, ref, context)],
+        ),
+      ),
     );
   }
 
-  Widget _buildRecentList() {
-    final mockData = [
-      {
-        'title': 'Cuộc họp dự án AI 2024...',
-        'sub': 'HÔM NAY - STT',
-        'isStt': true,
-      },
-      {
-        'title': 'Thông báo khách hàng v1',
-        'sub': 'HÔM QUA - TTS',
-        'isStt': false,
-      },
-    ];
+  Widget _buildRecentList(
+    List recentRecords,
+    WidgetRef ref,
+    BuildContext context,
+  ) {
+    if (recentRecords.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20.h),
+          child: Text('Chưa có bản ghi nào', style: AppTextStyles.labelGrey),
+        ),
+      );
+    }
 
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: mockData.length,
+      itemCount: recentRecords.length,
       separatorBuilder: (context, index) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
-        final item = mockData[index];
+        final item = recentRecords[index];
+        final timeStr = DateFormat('HH:mm - dd/MM').format(item.createAt);
+
         return Container(
           decoration: BoxDecoration(
             color: AppColors.cardBg,
@@ -172,7 +245,7 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(
-                item['isStt'] as bool
+                item.isStt
                     ? Icons.description_outlined
                     : Icons.volume_up_outlined,
                 color: AppColors.textGrey,
@@ -180,14 +253,41 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             title: Text(
-              item['title'] as String,
+              item.text,
               style: AppTextStyles.itemTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            subtitle: Text(item['sub'] as String, style: AppTextStyles.itemSub),
-            trailing: IconButton(
+            subtitle: Text(
+              '${timeStr.toUpperCase()} - ${item.isStt ? "STT" : "TTS"}',
+              style: AppTextStyles.itemSub,
+            ),
+            trailing: PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: AppColors.textGrey),
-              onPressed: () {},
+              onSelected: (value) {
+                if (value == 'delete') {
+                  ref.read(historyProvider.notifier).deleteRecords(index);
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text(
+                    'Xóa bản ghi',
+                    style: TextStyle(color: AppColors.danger),
+                  ),
+                ),
+              ],
             ),
+            onTap: () {
+              RecordDetailBottomSheet.show(
+                context,
+                title: item.text,
+                date: timeStr,
+                content: item.text,
+                isStt: item.isStt,
+              );
+            },
           ),
         );
       },

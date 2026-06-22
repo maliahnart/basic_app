@@ -1,12 +1,25 @@
+import 'package:demo_app/providers/history_provider.dart';
+import 'package:demo_app/providers/stt_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../utils/constants.dart';
 
-class RecordScreen extends StatelessWidget {
+class RecordScreen extends ConsumerWidget {
   const RecordScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sttState = ref.watch(sttProvider);
+    final sttNotifier = ref.read(sttProvider.notifier);
+    ref.listen(sttProvider.select((s) => s.errorMessage), (prev, next) {
+      if (next.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next)));
+      }
+    });
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
@@ -24,7 +37,9 @@ class RecordScreen extends StatelessWidget {
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
+                      color: sttState.isListening
+                          ? AppColors.danger.withOpacity(0.1)
+                          : AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Row(
@@ -32,8 +47,10 @@ class RecordScreen extends StatelessWidget {
                         Container(
                           width: 6.w,
                           height: 6.w,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
+                          decoration: BoxDecoration(
+                            color: sttState.isListening
+                                ? AppColors.danger
+                                : AppColors.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -41,7 +58,9 @@ class RecordScreen extends StatelessWidget {
                         Text(
                           'Tiếng Việt',
                           style: TextStyle(
-                            color: AppColors.primary,
+                            color: sttState.isListening
+                                ? AppColors.danger
+                                : AppColors.primary,
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -50,7 +69,12 @@ class RecordScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  Text('Sẵn sàng ghi âm', style: AppTextStyles.statusText),
+                  Text(
+                    sttState.isListening
+                        ? 'Đang lắng nghe...'
+                        : 'Sẵn sàng ghi âm',
+                    style: AppTextStyles.statusText,
+                  ),
                 ],
               ),
               SizedBox(height: 16.h),
@@ -79,7 +103,22 @@ class RecordScreen extends StatelessWidget {
                           Row(
                             children: [
                               TextButton.icon(
-                                onPressed: () {},
+                                onPressed: sttState.currentText.isNotEmpty
+                                    ? () {
+                                        Clipboard.setData(
+                                          ClipboardData(
+                                            text: sttState.currentText,
+                                          ),
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Đã sao chép!'),
+                                          ),
+                                        );
+                                      }
+                                    : null,
                                 icon: Icon(
                                   Icons.copy_rounded,
                                   size: 16.w,
@@ -100,7 +139,9 @@ class RecordScreen extends StatelessWidget {
                               ),
                               SizedBox(width: 6.w),
                               TextButton.icon(
-                                onPressed: () {},
+                                onPressed: sttState.currentText.isNotEmpty
+                                    ? () => sttNotifier.clearText()
+                                    : null,
                                 icon: Icon(
                                   Icons.delete_outline_rounded,
                                   size: 16.w,
@@ -127,8 +168,14 @@ class RecordScreen extends StatelessWidget {
                       Expanded(
                         child: SingleChildScrollView(
                           child: Text(
-                            'Xin chào, đây là kết quả chuyển đổi giọng nói thành văn bản thời gian thực. Hệ thống đang lắng nghe và xử lý âm thanh của bạn một cách chính xác nhất.',
-                            style: AppTextStyles.bodyDark,
+                            sttState.currentText.isEmpty
+                                ? 'Nội dung nói sẽ hiển thị tại đây...'
+                                : sttState.currentText,
+                            style: sttState.currentText.isEmpty
+                                ? AppTextStyles.bodyDark.copyWith(
+                                    color: AppColors.textGrey,
+                                  )
+                                : AppTextStyles.bodyDark,
                           ),
                         ),
                       ),
@@ -138,25 +185,50 @@ class RecordScreen extends StatelessWidget {
               ),
               SizedBox(height: 40.h),
 
-              // Bộ Trigger Mic lớn ở giữa phía dưới
               Center(
-                child: Container(
-                  width: 72.w,
-                  height: 72.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.mic, color: Colors.white, size: 32.w),
-                    onPressed: () {},
+                child: GestureDetector(
+                  onTap: () async {
+                    bool currentlyListening = sttState.isListening;
+                    await sttNotifier.toggleRecording();
+
+                    if (currentlyListening &&
+                        sttState.currentText.trim().isNotEmpty) {
+                      await ref
+                          .read(historyProvider.notifier)
+                          .saveRecords(text: sttState.currentText, isStt: true);
+                      sttNotifier.clearText();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã lưu bản ghi vào Gần đây!'),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 72.w,
+                    height: 72.w,
+                    decoration: BoxDecoration(
+                      color: sttState.isListening
+                          ? AppColors.danger
+                          : AppColors.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              (sttState.isListening
+                                      ? AppColors.danger
+                                      : AppColors.primary)
+                                  .withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      sttState.isListening ? Icons.stop : Icons.mic,
+                      color: Colors.white,
+                      size: 32.w,
+                    ),
                   ),
                 ),
               ),

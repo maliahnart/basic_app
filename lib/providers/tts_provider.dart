@@ -9,7 +9,7 @@ class TtsState {
   final String currentLanguage;
   TtsState({
     this.isPlaying = false,
-    this.speedRate = 1.0,
+    this.speedRate = 0.5,
     this.pitch = 1.0,
     this.volume = 1.0,
     this.currentLanguage = 'vi-VN',

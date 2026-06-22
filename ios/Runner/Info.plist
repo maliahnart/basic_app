@@ -29,6 +29,10 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ứng dụng cần truy cập Microphone của bạn để thực hiện ghi âm và chuyển đổi giọng nói thành văn bản.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Ứng dụng cần quyền nhận diện giọng nói để phân tích âm thanh ghi âm thành văn bản thời gian thực.</string>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
