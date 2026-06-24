@@ -32,6 +32,21 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
     super.dispose();
   }
 
+  void _onSliderChangedLive(
+    WidgetRef ref,
+    TtsState ttsState,
+    Function updateConfig,
+  ) {
+    updateConfig();
+
+    if (ttsState.isPlaying) {
+      final ttsNotifier = ref.read(ttsProvider.notifier);
+      ttsNotifier.stop().then((_) {
+        ttsNotifier.speak(_controller.text);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ttsState = ref.watch(ttsProvider);
@@ -154,6 +169,11 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
                               : ttsNotifier.speak(_controller.text),
                         ),
                       ),
+                      SizedBox(width: 24.w,),
+                      _buildMediaSubButton(
+                        Icons.pause,
+                        onTap: () => ttsNotifier.pause(),
+                      ),
                     ],
                   ),
                   SizedBox(height: 20.h),
@@ -163,7 +183,16 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
                     ttsState.speedRate,
                     0.5,
                     2.0,
-                    (v) => ttsNotifier.setSpeed(v),
+                    (v) {
+                      ttsNotifier.setSpeed(v);
+                    },
+                    onChangeEnd: (v) {
+                      _onSliderChangedLive(
+                        ref,
+                        ttsState,
+                        () => ttsNotifier.setSpeed(v),
+                      );
+                    },
                   ),
                   SizedBox(height: 10.h),
                   _buildSliderCard(
@@ -173,6 +202,13 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
                     0.5,
                     2.0,
                     (v) => ttsNotifier.setPitch(v),
+                    onChangeEnd: (v) {
+                      _onSliderChangedLive(
+                        ref,
+                        ttsState,
+                        () => ttsNotifier.setPitch(v),
+                      );
+                    },
                   ),
                   SizedBox(height: 10.h),
                   _buildSliderCard(
@@ -182,6 +218,13 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
                     0.0,
                     1.0,
                     (v) => ttsNotifier.setVolume(v),
+                    onChangeEnd: (v) {
+                      _onSliderChangedLive(
+                        ref,
+                        ttsState,
+                        () => ttsNotifier.setVolume(v),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -264,8 +307,9 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
     double currentVal,
     double min,
     double max,
-    ValueChanged<double> onChanged,
-  ) {
+    ValueChanged<double> onChanged, {
+    ValueChanged<double>? onChangeEnd,
+  }) {
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
@@ -287,6 +331,7 @@ class _PlaybackScreenState extends ConsumerState<PlaybackScreen> {
             min: min,
             max: max,
             onChanged: onChanged,
+            onChangeEnd: onChangeEnd,
             activeColor: AppColors.primary,
             inactiveColor: AppColors.border,
           ),

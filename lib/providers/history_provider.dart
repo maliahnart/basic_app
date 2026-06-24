@@ -5,11 +5,11 @@ import 'package:hive/hive.dart';
 class HistoryNotifier extends StateNotifier<List<VoiceRecord>> {
   final Box<VoiceRecord> _box;
   HistoryNotifier(this._box) : super([]) {
-    _loadRecords();
+    loadRecords();
   }
 
-  void _loadRecords() {
-    state = _box.values.toList().reversed.toList();
+  void loadRecords() {
+    state = _box.values.toList().reversed.take(5).toList();
   }
 
   Future<void> saveRecords({required String text, required bool isStt}) async {
@@ -20,24 +20,25 @@ class HistoryNotifier extends StateNotifier<List<VoiceRecord>> {
       createAt: DateTime.now(),
       isStt: isStt,
     );
-    List<VoiceRecord> currentList = _box.values.toList();
+    // List<VoiceRecord> currentList = _box.values.toList();
 
-    currentList.add(newRecord);
+    // currentList.add(newRecord);
 
-    if (currentList.length > 5) {
-      await _box.deleteAt(0);
-      currentList.removeAt(0);
-    }
+    // if (currentList.length > 5) {
+    //   await _box.deleteAt(0);
+    //   currentList.removeAt(0);
+    // }
 
     await _box.add(newRecord);
-    state = _box.values.toList().reversed.toList();
+    // state = _box.values.toList().reversed.toList();
+    loadRecords();
   }
 
   Future<void> deleteRecords(int uiIndex) async {
     int hiveIndex = (_box.length - 1) - uiIndex;
     if (hiveIndex >= 0 && hiveIndex < _box.length) {
       await _box.deleteAt(hiveIndex);
-      _loadRecords();
+      loadRecords();
     }
   }
 }

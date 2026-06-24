@@ -78,6 +78,11 @@ class TtsNotifier extends StateNotifier<TtsState> {
     await _flutterTts.stop();
     state = state.copyWith(isPlaying: false);
   }
+  Future<void> pause() async {
+    await _flutterTts.pause();
+    state = state.copyWith(isPlaying: false);
+  }
+  
 }
 
 final ttsProvider = StateNotifierProvider<TtsNotifier, TtsState>(

@@ -31,48 +31,72 @@ class RecordScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: sttState.isListening
-                          ? AppColors.danger.withOpacity(0.1)
-                          : AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 6.w,
-                          height: 6.w,
-                          decoration: BoxDecoration(
+                  PopupMenuButton<AppLanguage>(
+                    enabled: !sttState.isListening,
+                    initialValue: sttState.currentLanguage,
+                    onSelected: (AppLanguage lang) {
+                      sttNotifier.setLanguage(lang);
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return AppLanguages.supported.map((AppLanguage lang) {
+                        return PopupMenuItem(
+                          value: lang,
+                          child: Row(
+                            children: [
+                              Text(
+                                lang.flag,
+                                style: TextStyle(fontSize: 16.sp),
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(lang.name, style: AppTextStyles.bodyDark),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: sttState.isListening
+                            ? AppColors.danger.withOpacity(0.1)
+                            : AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            sttState.currentLanguage.flag,
+                            style: TextStyle(fontSize: 12.sp),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            sttState.currentLanguage.name,
+                            style: TextStyle(
+                              color: sttState.isListening
+                                  ? AppColors.danger
+                                  : AppColors.primary,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(width: 2.w),
+                          Icon(
+                            Icons.arrow_drop_down,
                             color: sttState.isListening
                                 ? AppColors.danger
                                 : AppColors.primary,
-                            shape: BoxShape.circle,
+                            size: 16.w,
                           ),
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          'Tiếng Việt',
-                          style: TextStyle(
-                            color: sttState.isListening
-                                ? AppColors.danger
-                                : AppColors.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(width: 8.w),
                   Text(
-                    sttState.isListening
-                        ? 'Đang lắng nghe...'
-                        : 'Sẵn sàng ghi âm',
+                    sttState.isListening ? 'Đang lắng nghe' : 'Sẵn sàng ghi âm',
                     style: AppTextStyles.statusText,
                   ),
                 ],

@@ -197,7 +197,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           shape: const Border(),
           collapsedShape: const Border(),
-          onExpansionChanged: _scrollToDropdown,
+          onExpansionChanged: (isExpanded) {
+            ref.read(historyProvider.notifier).loadRecords();
+            _scrollToDropdown(isExpanded);
+          },
+
           children: [_buildRecentList(recentRecords, ref, context)],
         ),
       ),

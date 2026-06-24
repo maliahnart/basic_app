@@ -1,3 +1,4 @@
+import 'package:demo_app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -82,7 +83,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.splashBg,
         body: Padding(
           padding: EdgeInsets.all(10.w),
           child: rive.RiveWidgetBuilder(

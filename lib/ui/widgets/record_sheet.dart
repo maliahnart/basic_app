@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants.dart';
@@ -137,10 +138,21 @@ class _BottomSheetContent extends ConsumerWidget {
                             letterSpacing: 0.5,
                           ),
                         ),
-                        Icon(
-                          Icons.copy_rounded,
-                          size: 18.w,
-                          color: AppColors.primary,
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: content));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Đã sao chép nội dung!'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 18.w,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ],
                     ),

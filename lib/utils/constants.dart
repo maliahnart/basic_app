@@ -7,6 +7,7 @@ class AppColors {
   static const Color primaryLight = Color(0xFFEEEEFF);
   static const Color textDark = Color(0xFF1E293B);
   static const Color textGrey = Color(0xFF64748B);
+  static const Color splashBg = Color(0xFF0C0C0C);
 
   // Card STT & TTS
   static const Color sttIconBg = Color(0xFF6366F1);
@@ -114,4 +115,26 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: AppColors.textGrey,
   );
+}
+
+class AppLanguage {
+  final String name;
+  final String localeId;
+  final String flag;
+
+  const AppLanguage({
+    required this.name,
+    required this.localeId,
+    required this.flag,
+  });
+}
+
+class AppLanguages {
+  static const List<AppLanguage> supported = [
+    AppLanguage(name: 'Tiếng Việt', localeId: 'vi_VN', flag: '🇻🇳'),
+    AppLanguage(name: 'Tiếng Anh', localeId: 'en_US', flag: '🇺🇸'),
+    AppLanguage(name: 'Tiếng Nhật', localeId: 'ja_JP', flag: '🇯🇵'),
+    AppLanguage(name: 'Tiếng Hàn', localeId: 'ko_KR', flag: '🇰🇷'),
+    AppLanguage(name: 'Tiếng Trung', localeId: 'zh_CN', flag: '🇨🇳'),
+  ];
 }
